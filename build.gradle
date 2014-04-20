@@ -21,8 +21,8 @@ buildscript {
 
 apply plugin: 'forge'
 
-ext.url = "http://ic2api.player.to:8080/job/IC2_experimental/464/artifact/build/libs/industrialcraft-2-2.1.464-experimental-api.jar"
-ext.urlver = "2.1.464"
+ext.url = "http://player.to/forestry/forestry-2.4.0.0-711-api.zip"
+ext.urlver = "2.4.0.0.711"
 
 version = urlver + '.' + project.buildnum
 
