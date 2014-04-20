@@ -1,0 +1,117 @@
+buildscript {
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+    repositories {
+        mavenCentral()
+	mavenLocal()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+    }
+}
+
+apply plugin: 'forge'
+
+ext.url = "http://ic2api.player.to:8080/job/IC2_experimental/464/artifact/build/libs/industrialcraft-2-2.1.464-experimental-api.jar"
+ext.urlver = "2.1.464"
+
+version = urlver + '.' + project.buildnum
+
+group = "net.bdew.thirdparty"
+
+minecraft {
+    version = "1.7.2-10.12.0.1056"
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "bdew"
+        url = "http://jenkins.bdew.net/maven"
+    }
+}
+
+dependencies {
+}
+
+ext.zipfile="build/download/"+project.name+"-"+project.urlver+".zip"
+ext.unpacked="build/"+project.name+"-"+project.urlver
+
+task download {
+    inputs.property "url", project.url
+    inputs.property "version", project.urlver
+    outputs.file project.zipfile
+    doFirst {
+        mkdir("build/download")
+    }
+    doLast {
+        ant.get(src: project.url, dest: project.zipfile, verbose: "true")
+    }
+}
+
+task unzip {
+    inputs.file project.zipfile
+    outputs.files fileTree(dir: project.unpacked)
+    dependsOn download
+    doLast {
+        ant.unzip(src: project.zipfile, dest: project.unpacked)
+    }
+}
+
+afterEvaluate {
+    sourceMainJava.dependsOn(unzip)
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir project.unpacked
+        }
+    }
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+}
+
+jar {
+    appendix = "obf"
+}
+
+artifacts {
+    archives sourceJar
+    archives deobfJar
+}
+
+apply plugin: 'maven-publish'
+
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact deobfJar
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "file://var/www/maven"
+        }
+    }
+}
